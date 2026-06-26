@@ -4,7 +4,7 @@ export default function Footer() {
   return (
     <footer className="site-footer">
       <div className="footer-inner">
-        <div className="footer-brand">
+        <div className="footer-left">
           <p className="footer-copy">
             Copyright © {currentYear} Team <span>!BlackBox</span>
           </p>
@@ -12,21 +12,21 @@ export default function Footer() {
           <p className="footer-project">
             SUST QueueStorm Investigator
           </p>
-        </div>
 
-        <div className="footer-team-block">
-          <p className="footer-label">Team Members</p>
+          <div className="footer-team-block">
+            <p className="footer-label">Team Members</p>
 
-          <div className="footer-team-members">
-            <span>Julfikar Jim</span>
-            <span className="footer-dot">•</span>
-            <span>Sajjad Hossain Soykot</span>
-            <span className="footer-dot">•</span>
-            <span>Abu Ubaida</span>
+            <div className="footer-team-members">
+              <span>Julfikar Jim</span>
+              <span className="footer-dot">•</span>
+              <span>Sajjad Hossain Soykot</span>
+              <span className="footer-dot">•</span>
+              <span>Abu Ubaida</span>
+            </div>
           </div>
         </div>
 
-        <div className="footer-credit-block">
+        <div className="footer-right">
           <div className="footer-credit-row">
             <span className="footer-role">API Developer</span>
             <a
