@@ -32,6 +32,7 @@ sust-queuestorm-investigator-preli/
 │   │   ├── main.py                  # FastAPI app, endpoints, exception handlers
 │   │   ├── models.py                # Pydantic request/response schemas and enums
 │   │   └── safety.py                # Post-generation safety checks and sanitizers
+│   ├── .dockerignore
 │   ├── .env.example
 │   ├── .gitignore
 │   ├── Dockerfile
@@ -55,8 +56,10 @@ sust-queuestorm-investigator-preli/
 │   │   ├── App.jsx                  # Main dashboard component
 │   │   ├── main.jsx                 # React entry point
 │   │   └── styles.css               # Full custom CSS design system
+│   ├── .dockerignore
 │   ├── .env.example
 │   ├── .gitignore
+│   ├── Dockerfile
 │   ├── index.html
 │   ├── package.json
 │   └── package-lock.json
@@ -308,6 +311,32 @@ VITE_API_BASE_URL=https://your-deployed-backend-url.com
 ```
 
 Then redeploy the frontend.
+
+---
+
+### Deploy with Docker
+
+Both the backend and frontend include Dockerfiles.
+
+**Backend:**
+
+```bash
+cd backend
+docker build -t queuestorm-backend .
+docker run -p 8000:8000 --env-file .env queuestorm-backend
+```
+
+**Frontend:**
+
+```bash
+cd frontend
+docker build \
+  --build-arg VITE_API_BASE_URL=https://your-backend-url.com \
+  -t queuestorm-frontend .
+docker run -p 3000:80 queuestorm-frontend
+```
+
+The frontend Dockerfile uses a multi-stage build: Node 20 builds the Vite app, then nginx serves the static files with SPA fallback. Override `VITE_API_BASE_URL` at build time via `--build-arg`.
 
 ---
 
