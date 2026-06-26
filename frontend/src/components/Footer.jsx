@@ -16,13 +16,14 @@ export default function Footer() {
 
         <div className="footer-team-block">
           <p className="footer-label">Team Members</p>
-          <p className="footer-team-members">
-            Julfikar Jim
+
+          <div className="footer-team-members">
+            <span>Julfikar Jim</span>
             <span className="footer-dot">•</span>
-            Sajjad Hossain Soykot
+            <span>Sajjad Hossain Soykot</span>
             <span className="footer-dot">•</span>
-            Abu Ubaida
-          </p>
+            <span>Abu Ubaida</span>
+          </div>
         </div>
 
         <div className="footer-credit-block">
