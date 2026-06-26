@@ -14,7 +14,7 @@ The system accepts a customer support ticket, checks the complaint against recen
 
 | Part | URL |
 |---|---|
-| Frontend | Add your deployed frontend URL here |
+| Frontend | `https://queuestorm-investigator-preli.vercel.app` |
 | Backend API | `https://sust-queuestorm-investigator.vercel.app` |
 | Health Check | `https://sust-queuestorm-investigator.vercel.app/health` |
 | Analyze Endpoint | `POST /analyze-ticket` |
