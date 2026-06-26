@@ -451,14 +451,26 @@ async def polish_texts_with_llm(request: TicketAnalysisRequest, response: Ticket
         response.customer_reply = cached.get("customer_reply", response.customer_reply)
         return response
 
-    api_key = settings.GEMINI_API_KEY
-    if not api_key:
+    api_keys = []
+    if settings.GEMINI_API_KEY:
+        api_keys = [k.strip() for k in settings.GEMINI_API_KEY.split(",") if k.strip()]
+
+    if not api_keys:
         logger.info("GEMINI_API_KEY is not configured. Retaining fallback templates.")
         return response
 
-    # Construct the API URL for Gemini
-    model = settings.GEMINI_MODEL
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+    # Fallback model priority queue (using models supported by the API key)
+    fallback_models = [
+        settings.GEMINI_MODEL,     # Primary model (e.g. gemini-2.5-flash)
+        "gemini-2.0-flash",
+        "gemini-flash-latest",
+        "gemini-2.0-flash-lite",
+    ]
+    # Remove duplicate models while maintaining order
+    models_to_try = []
+    for model in fallback_models:
+        if model not in models_to_try:
+            models_to_try.append(model)
     
     # Format transaction history for the prompt
     tx_history_str = "No transactions available."
@@ -544,34 +556,46 @@ Respond with valid JSON conforming to the requested schema.
         }
     }
 
-    try:
-        async with httpx.AsyncClient(timeout=settings.REQUEST_TIMEOUT_SEC) as client:
-            logger.info(f"Sending text generation request to Gemini API ({model})...")
-            api_response = await client.post(url, json=payload)
+    # Outer loop rotates through API keys; Inner loop rotates through fallback models
+    for key_idx, api_key in enumerate(api_keys):
+        for model in models_to_try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
             
-            if api_response.status_code != 200:
-                logger.error(f"Gemini API returned status code {api_response.status_code}: {api_response.text}")
-                return response
-                
-            result_json = api_response.json()
-            candidate_text = result_json['candidates'][0]['content']['parts'][0]['text']
-            parsed_data = json.loads(candidate_text)
-            
-            # Update response with LLM polished texts
-            response.agent_summary = parsed_data.get("agent_summary", response.agent_summary)
-            response.recommended_next_action = parsed_data.get("recommended_next_action", response.recommended_next_action)
-            response.customer_reply = parsed_data.get("customer_reply", response.customer_reply)
-            
-            # Cache the successfully polished texts locally
-            set_cached_texts(request.complaint, response.case_type.value, response.relevant_transaction_id, {
-                "agent_summary": response.agent_summary,
-                "recommended_next_action": response.recommended_next_action,
-                "customer_reply": response.customer_reply
-            })
-            
-    except Exception as e:
-        logger.error(f"Failed to polish text with Gemini: {str(e)}", exc_info=True)
-        
+            try:
+                async with httpx.AsyncClient(timeout=settings.REQUEST_TIMEOUT_SEC) as client:
+                    logger.info(f"Sending text generation request to Gemini API (Key #{key_idx + 1}/{len(api_keys)}, Model: {model})...")
+                    api_response = await client.post(url, json=payload)
+                    
+                    if api_response.status_code == 429:
+                        logger.warning(f"Rate limit (429) hit for Model {model} with Key #{key_idx + 1}. Trying next fallback...")
+                        continue
+                        
+                    if api_response.status_code != 200:
+                        logger.error(f"Gemini API returned status code {api_response.status_code} for model {model} using Key #{key_idx + 1}: {api_response.text}")
+                        continue
+                        
+                    result_json = api_response.json()
+                    candidate_text = result_json['candidates'][0]['content']['parts'][0]['text']
+                    parsed_data = json.loads(candidate_text)
+                    
+                    # Update response with LLM polished texts
+                    response.agent_summary = parsed_data.get("agent_summary", response.agent_summary)
+                    response.recommended_next_action = parsed_data.get("recommended_next_action", response.recommended_next_action)
+                    response.customer_reply = parsed_data.get("customer_reply", response.customer_reply)
+                    
+                    # Cache the successfully polished texts locally
+                    set_cached_texts(request.complaint, response.case_type.value, response.relevant_transaction_id, {
+                        "agent_summary": response.agent_summary,
+                        "recommended_next_action": response.recommended_next_action,
+                        "customer_reply": response.customer_reply
+                    })
+                    return response
+                    
+            except Exception as e:
+                logger.error(f"Failed to polish text using Model {model} with Key #{key_idx + 1}: {str(e)}", exc_info=True)
+                continue
+
+    logger.error("All Gemini API keys and fallback models were exhausted. Retaining deterministic fallback templates.")
     return response
 
 # =====================================================================

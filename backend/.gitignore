@@ -39,3 +39,6 @@ ticket_db.sqlite
 
 # Docker/local
 docker-compose.override.yml
+
+# Cache
+llm_cache.json
