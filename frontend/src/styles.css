@@ -134,8 +134,10 @@ pre { overflow: auto; max-width: 100%; white-space: pre-wrap; word-break: break-
   position: relative;
   overflow: hidden;
   display: grid;
-  gap: 18px;
-  padding: 26px 28px;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 28px;
+  align-items: center;
+  padding: 26px 30px;
   border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 28px;
   background:
@@ -144,7 +146,6 @@ pre { overflow: auto; max-width: 100%; white-space: pre-wrap; word-break: break-
     rgba(15, 23, 42, 0.82);
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.26);
   backdrop-filter: blur(18px);
-  text-align: center;
 }
 
 .footer-inner::before {
@@ -162,16 +163,24 @@ pre { overflow: auto; max-width: 100%; white-space: pre-wrap; word-break: break-
   opacity: 0.65;
 }
 
-.footer-brand,
-.footer-team-block,
-.footer-credit-block {
+.footer-left,
+.footer-right {
   position: relative;
   z-index: 1;
 }
 
-.footer-brand {
+.footer-left {
   display: grid;
-  gap: 5px;
+  gap: 7px;
+  text-align: left;
+  justify-items: start;
+}
+
+.footer-right {
+  display: grid;
+  gap: 12px;
+  text-align: right;
+  justify-items: end;
 }
 
 .footer-copy,
@@ -203,7 +212,8 @@ pre { overflow: auto; max-width: 100%; white-space: pre-wrap; word-break: break-
 
 .footer-team-block {
   display: grid;
-  gap: 5px;
+  gap: 4px;
+  margin-top: 4px;
 }
 
 .footer-label {
@@ -216,7 +226,7 @@ pre { overflow: auto; max-width: 100%; white-space: pre-wrap; word-break: break-
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 6px;
   color: #cbd5e1;
   font-size: 0.88rem;
@@ -229,30 +239,23 @@ pre { overflow: auto; max-width: 100%; white-space: pre-wrap; word-break: break-
   font-weight: 900;
 }
 
-.footer-credit-block {
-  display: grid;
-  gap: 10px;
-  padding-top: 2px;
-}
-
 .footer-credit-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-  color: #cbd5e1;
-  font-size: 0.9rem;
-  line-height: 1.5;
+  display: grid;
+  gap: 3px;
 }
 
 .footer-role {
   color: #f8fafc;
+  font-size: 0.88rem;
   font-weight: 900;
+  line-height: 1.4;
 }
 
 .footer-credit-row a {
   color: #38bdf8;
+  font-size: 0.9rem;
   font-weight: 900;
+  line-height: 1.4;
   text-decoration: none;
   transition: color 0.2s ease, transform 0.2s ease;
 }
@@ -263,7 +266,7 @@ pre { overflow: auto; max-width: 100%; white-space: pre-wrap; word-break: break-
   transform: translateY(-1px);
 }
 
-/* Mobile footer */
+/* Mobile footer: centered and stacked */
 @media (max-width: 720px) {
   .site-footer {
     width: min(100% - 20px, 1440px);
@@ -272,9 +275,17 @@ pre { overflow: auto; max-width: 100%; white-space: pre-wrap; word-break: break-
   }
 
   .footer-inner {
+    grid-template-columns: 1fr;
     gap: 18px;
     padding: 22px 16px;
     border-radius: 22px;
+    text-align: center;
+  }
+
+  .footer-left,
+  .footer-right {
+    text-align: center;
+    justify-items: center;
   }
 
   .footer-copy {
@@ -292,6 +303,7 @@ pre { overflow: auto; max-width: 100%; white-space: pre-wrap; word-break: break-
   .footer-team-members {
     display: grid;
     justify-items: center;
+    justify-content: center;
     gap: 3px;
     max-width: 280px;
     margin: 0 auto;
@@ -306,22 +318,20 @@ pre { overflow: auto; max-width: 100%; white-space: pre-wrap; word-break: break-
     opacity: 0.75;
   }
 
-  .footer-credit-block {
+  .footer-right {
     gap: 12px;
   }
 
   .footer-credit-row {
-    display: grid;
     justify-items: center;
     gap: 3px;
-    font-size: 0.82rem;
   }
 
   .footer-role {
-    display: block;
+    font-size: 0.82rem;
   }
 
   .footer-credit-row a {
-    display: inline-block;
+    font-size: 0.82rem;
   }
 }
