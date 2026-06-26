@@ -53,6 +53,15 @@ WRONG_TRANSFER_KEYWORDS = [
     "ভুলে পাঠিয়েছি",
     "ভুলে পাঠিয়েছি",
     "ভুল ব্যক্তিকে",
+    "didn't get",
+    "did not get",
+    "didn't receive",
+    "did not receive",
+    "not received",
+    "পায়নি",
+    "পায়নি",
+    "পায় নাই",
+    "পায় নাই",
 ]
 
 PAYMENT_FAILED_KEYWORDS = [
@@ -70,6 +79,13 @@ PAYMENT_FAILED_KEYWORDS = [
     "ব্যর্থ",
     "ফেইল",
     "ফেল",
+    "failed",
+    "failure",
+    "error",
+    "deducted",
+    "deduct",
+    "কেটেছে",
+    "কেটে নিলো",
 ]
 
 DUPLICATE_PAYMENT_KEYWORDS = [
@@ -182,17 +198,18 @@ def determine_severity(case_type: CaseType, verdict: str, amount: float | None) 
 
     if value >= 50000:
         return "critical"
-    if value >= 10000:
+
+    if case_type == "wrong_transfer":
+        return "high" if value >= 5000 else "medium"
+
+    if case_type in {"payment_failed", "duplicate_payment", "agent_cash_in_issue"}:
         return "high"
 
-    if case_type in {"wrong_transfer", "duplicate_payment"}:
-        return "high" if value >= 2000 else "medium"
-
-    if case_type in {"payment_failed", "merchant_settlement_delay", "agent_cash_in_issue"}:
-        return "medium" if value < 10000 else "high"
-
-    if verdict in {"inconsistent", "insufficient_data"} and case_type != "other":
+    if case_type == "merchant_settlement_delay":
         return "medium"
+
+    if case_type == "refund_request":
+        return "low"
 
     return "low"
 

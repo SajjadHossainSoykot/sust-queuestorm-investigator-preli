@@ -71,15 +71,15 @@ def match_transaction(complaint: str, case_type: CaseType, transactions: list[Tr
             # Return the latest item in the duplicate cluster as the relevant duplicate payment.
             return MatchResult(duplicate_cluster[-1], 90, ["duplicate_pattern", "transaction_match"])
 
-    best_txn: TransactionEntry | None = None
     best_score = -1
     best_reasons: list[str] = []
 
     expected_types = CASE_TYPE_TO_TRANSACTION_TYPES[case_type]
 
+    scored_txns = []
     for txn in transactions:
         score = 0
-        reasons: list[str] = []
+        reasons = []
 
         if normalize_text(txn.transaction_id) and normalize_text(txn.transaction_id) in text:
             score += 120
@@ -113,17 +113,28 @@ def match_transaction(complaint: str, case_type: CaseType, transactions: list[Tr
             score += 15
             reasons.append("completed_transfer_match")
 
-        if score > best_score:
-            best_txn = txn
-            best_score = score
-            best_reasons = reasons
+        scored_txns.append((score, txn, reasons))
 
-    if best_txn is not None and best_score >= 30:
-        # Keep reason labels concise and deterministic.
-        clean_reasons = list(dict.fromkeys(best_reasons + ["transaction_match"]))
-        return MatchResult(best_txn, best_score, clean_reasons)
+    if not scored_txns:
+        return MatchResult(None, 0, ["no_transaction_match"])
 
-    return MatchResult(None, max(best_score, 0), ["no_transaction_match"])
+    max_score = max(item[0] for item in scored_txns)
+
+    if max_score < 30:
+        return MatchResult(None, max_score, ["no_transaction_match"])
+
+    best_candidates = [item for item in scored_txns if item[0] == max_score]
+
+    if len(best_candidates) > 1:
+        # Check if the candidates have distinct counterparties
+        import re
+        distinct_counterparties = {re.sub(r"\D", "", c[1].counterparty or "") for c in best_candidates}
+        if len(distinct_counterparties) > 1:
+            return MatchResult(None, max_score, ["ambiguous_match", "no_transaction_match"])
+
+    best_score, best_txn, best_reasons = best_candidates[0]
+    clean_reasons = list(dict.fromkeys(best_reasons + ["transaction_match"]))
+    return MatchResult(best_txn, best_score, clean_reasons)
 
 
 def evidence_verdict(case_type: CaseType, txn: TransactionEntry | None, transactions: list[TransactionEntry]) -> EvidenceVerdict:
@@ -135,6 +146,21 @@ def evidence_verdict(case_type: CaseType, txn: TransactionEntry | None, transact
 
     if case_type == "wrong_transfer":
         if txn.type == "transfer" and txn.status == "completed":
+            # Check if there are other completed transfers or payments to the same counterparty in the history.
+            import re
+            def clean_phone(p):
+                return re.sub(r"\D", "", p or "")
+            clean_tgt = clean_phone(txn.counterparty)
+            if clean_tgt:
+                other_txns = [
+                    t for t in transactions 
+                    if t.transaction_id != txn.transaction_id 
+                    and clean_phone(t.counterparty) == clean_tgt
+                    and t.status == "completed" 
+                    and t.type in {"transfer", "payment"}
+                ]
+                if len(other_txns) > 0:
+                    return "inconsistent"
             return "consistent"
         return "inconsistent"
 
