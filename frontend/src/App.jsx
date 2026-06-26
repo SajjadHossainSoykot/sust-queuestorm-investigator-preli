@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { API_BASE_URL, analyzeTicket, checkHealth, normalizeBaseUrl } from './api/client';
 import { blankTransaction, languageOptions, sampleCases, transactionStatuses, transactionTypes, userTypes } from './data/examples';
+import Footer from './components/Footer';
 
 const defaultPayload = sampleCases[0].payload;
 const API_STORAGE_KEY = 'queuestorm_api_base_url';
@@ -191,7 +192,8 @@ export default function App() {
   const severityTone = result?.severity === 'critical' || result?.severity === 'high' ? 'danger' : result?.severity === 'medium' ? 'warning' : 'success';
 
   return (
-    <main className="app-shell">
+    <>
+      <main className="app-shell">
       <section className="hero">
         <div className="hero-content">
           <Pill tone="brand"><Sparkles size={14} /> SUST QueueStorm Investigator</Pill>
@@ -358,6 +360,8 @@ export default function App() {
           ) : null}
         </aside>
       </section>
-    </main>
+      </main>
+      <Footer />
+    </>
   );
 }
