@@ -122,6 +122,10 @@ AGENT_CASH_IN_KEYWORDS = [
     "ক্যাশ ইন",
     "ক্যাশইন",
     "জমা",
+    "agent",
+    "to agent",
+    "from agent",
+    "cash to",
 ]
 
 REFUND_KEYWORDS = [
@@ -176,7 +180,7 @@ def classify_case(complaint: str, user_type: str | None = None, channel: str | N
 
 
 def route_department(case_type: CaseType, verdict: str, amount: float | None = None) -> Department:
-    if case_type == "refund_request" and (verdict in {"inconsistent", "insufficient_data"} or (amount or 0) >= 10000):
+    if case_type == "refund_request" and (verdict == "inconsistent" or (amount or 0) >= 10000):
         return "dispute_resolution"
     return DEPARTMENT_BY_CASE[case_type]
 
@@ -200,7 +204,7 @@ def determine_severity(case_type: CaseType, verdict: str, amount: float | None) 
         return "critical"
 
     if case_type == "wrong_transfer":
-        return "high" if value >= 5000 else "medium"
+        return "high" if value >= 3000 else "medium"
 
     if case_type in {"payment_failed", "duplicate_payment", "agent_cash_in_issue"}:
         return "high"
@@ -216,6 +220,9 @@ def determine_severity(case_type: CaseType, verdict: str, amount: float | None) 
 
 def needs_human_review(case_type: CaseType, verdict: str, severity: Severity, amount: float | None, relevant_txn_found: bool) -> bool:
     if case_type == "phishing_or_social_engineering":
+        return True
+
+    if verdict == "inconsistent":
         return True
 
     if (amount or 0) >= 50000:
