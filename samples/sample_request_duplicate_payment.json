@@ -1,0 +1,25 @@
+{
+  "ticket_id": "TKT-003",
+  "complaint": "I paid the merchant 1200 taka but I was charged twice.",
+  "language": "en",
+  "channel": "in_app_chat",
+  "user_type": "customer",
+  "transaction_history": [
+    {
+      "transaction_id": "TXN-2001",
+      "timestamp": "2026-04-14T16:01:00Z",
+      "type": "payment",
+      "amount": 1200,
+      "counterparty": "MER-7788",
+      "status": "completed"
+    },
+    {
+      "transaction_id": "TXN-2002",
+      "timestamp": "2026-04-14T16:01:40Z",
+      "type": "payment",
+      "amount": 1200,
+      "counterparty": "MER-7788",
+      "status": "completed"
+    }
+  ]
+}

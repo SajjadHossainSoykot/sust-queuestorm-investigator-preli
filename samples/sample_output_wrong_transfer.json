@@ -1,0 +1,22 @@
+{
+  "ticket_id": "TKT-001",
+  "relevant_transaction_id": "TXN-9101",
+  "evidence_verdict": "consistent",
+  "case_type": "wrong_transfer",
+  "severity": "high",
+  "department": "dispute_resolution",
+  "agent_summary": "Transaction TXN-9101 for 5000 BDT with status completed; classified as wrong_transfer. Evidence verdict is consistent. Customer said: I sent 5000 taka to a wrong number around 2pm today. Please help.",
+  "recommended_next_action": "Verify transaction TXN-9101, confirm the recipient identifier through safe non-secret details, and route the dispute for human review.",
+  "customer_reply": "We have noted your concern about transaction TXN-9101. Our support team will verify the transaction details. If any amount is found eligible, it will be processed through official channels.",
+  "human_review_required": true,
+  "confidence": 0.95,
+  "reason_codes": [
+    "wrong_transfer",
+    "amount_match",
+    "type_match",
+    "complaint_intent_match",
+    "completed_transfer_match",
+    "transaction_match",
+    "consistent"
+  ]
+}

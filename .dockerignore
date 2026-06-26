@@ -1,0 +1,14 @@
+.git
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.sqlite
+.env
+.env.*
+!*.env.example
+.DS_Store
+__MACOSX
+node_modules
+frontend
+.pytest_cache

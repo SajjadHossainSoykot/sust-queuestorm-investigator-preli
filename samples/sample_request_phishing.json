@@ -1,0 +1,9 @@
+{
+  "ticket_id": "TKT-002",
+  "complaint": "Someone called me saying they are from support and asked for my OTP and PIN to unlock cashback.",
+  "language": "en",
+  "channel": "call_center",
+  "user_type": "customer",
+  "campaign_context": "boishakh_bonanza_day_1",
+  "transaction_history": []
+}
