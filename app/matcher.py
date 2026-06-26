@@ -13,7 +13,7 @@ from app.taxonomy import (
     REFUND_KEYWORDS,
     WRONG_TRANSFER_KEYWORDS,
 )
-from app.text_utils import amount_mentioned, contains_any, last_digits_in_text, normalize_text
+from app.text_utils import amount_mentioned, contains_any, extract_amounts, last_digits_in_text, normalize_text
 
 
 @dataclass(frozen=True)
@@ -47,11 +47,9 @@ CASE_KEYWORDS: dict[CaseType, list[str]] = {
 
 
 def find_duplicate_cluster(transactions: list[TransactionEntry]) -> list[TransactionEntry]:
-    groups: dict[tuple[str, float, str, str], list[TransactionEntry]] = defaultdict(list)
+    groups: dict[tuple[str, float, str], list[TransactionEntry]] = defaultdict(list)
     for txn in transactions:
-        if txn.status != "completed":
-            continue
-        key = (txn.type, float(txn.amount), normalize_text(txn.counterparty), txn.status)
+        key = (txn.type, float(txn.amount), normalize_text(txn.counterparty))
         groups[key].append(txn)
     duplicates = [items for items in groups.values() if len(items) >= 2]
     if not duplicates:
@@ -71,6 +69,7 @@ def match_transaction(complaint: str, case_type: CaseType, transactions: list[Tr
             # Return the latest item in the duplicate cluster as the relevant duplicate payment.
             return MatchResult(duplicate_cluster[-1], 90, ["duplicate_pattern", "transaction_match"])
 
+    best_txn: TransactionEntry | None = None
     best_score = -1
     best_reasons: list[str] = []
 
@@ -78,6 +77,9 @@ def match_transaction(complaint: str, case_type: CaseType, transactions: list[Tr
 
     scored_txns = []
     for txn in transactions:
+        if expected_types and txn.type not in expected_types:
+            continue
+
         score = 0
         reasons = []
 
@@ -88,6 +90,13 @@ def match_transaction(complaint: str, case_type: CaseType, transactions: list[Tr
         if amount_mentioned(text, txn.amount):
             score += 35
             reasons.append("amount_match")
+        else:
+            # Check if any amounts are mentioned in the text at all
+            mentioned_amounts = extract_amounts(text)
+            if mentioned_amounts:
+                # If a mentioned amount exists but it doesn't match this transaction, penalize heavily
+                if not any(abs(candidate - float(txn.amount)) <= 0.01 for candidate in mentioned_amounts):
+                    score -= 50
 
         if expected_types and txn.type in expected_types:
             score += 25
@@ -96,6 +105,13 @@ def match_transaction(complaint: str, case_type: CaseType, transactions: list[Tr
         if last_digits_in_text(txn.counterparty, text):
             score += 25
             reasons.append("counterparty_match")
+        else:
+            # Check if any alphabetic words from the counterparty are mentioned in text (e.g. "campaign")
+            import re
+            counterparty_words = [w.lower() for w in re.split(r'[-_\s]', txn.counterparty or "") if len(w) >= 4]
+            if any(word in text for word in counterparty_words):
+                score += 25
+                reasons.append("counterparty_match")
 
         if txn.status in text:
             score += 15
@@ -144,6 +160,9 @@ def evidence_verdict(case_type: CaseType, txn: TransactionEntry | None, transact
     if txn is None:
         return "insufficient_data"
 
+    if case_type == "other":
+        return "insufficient_data"
+
     if case_type == "wrong_transfer":
         if txn.type == "transfer" and txn.status == "completed":
             # Check if there are other completed transfers or payments to the same counterparty in the history.
@@ -174,6 +193,8 @@ def evidence_verdict(case_type: CaseType, txn: TransactionEntry | None, transact
     if case_type == "duplicate_payment":
         duplicate_cluster = find_duplicate_cluster(transactions)
         if duplicate_cluster:
+            if any(t.status in {"reversed", "failed"} for t in duplicate_cluster):
+                return "inconsistent"
             return "consistent"
         # A matched single transaction contradicts a clear duplicate claim more than no data does.
         return "inconsistent"
