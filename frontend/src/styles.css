@@ -32,6 +32,13 @@ code, pre { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospac
 .hero-panel > span { color: #93a4ba; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; font-size: .72rem; }
 .hero-panel code { display: block; padding: 16px; border-radius: 18px; color: #bfdbfe; background: rgba(2, 6, 23, .78); border: 1px solid rgba(59, 130, 246, .25); word-break: break-all; }
 .health-line { margin-top: 4px; }
+.api-panel { align-items: stretch; }
+.api-field { margin-top: 4px; }
+.api-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.api-actions .ghost-button { width: 100%; padding: 10px 12px; }
+.api-note { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px 14px; border: 1px solid rgba(96, 165, 250, .22); border-radius: 16px; background: rgba(37, 99, 235, .08); color: #cbd5e1; margin-bottom: 14px; }
+.api-note span { color: #94a3b8; font-size: .85rem; }
+.api-note code { color: #bfdbfe; word-break: break-all; }
 
 .pill { display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(148, 163, 184, .25); color: #cbd5e1; background: rgba(15, 23, 42, .72); padding: 7px 11px; border-radius: 999px; font-size: .8rem; font-weight: 800; text-transform: capitalize; }
 .pill-brand { color: #bfdbfe; background: rgba(37, 99, 235, .18); border-color: rgba(96, 165, 250, .35); }
@@ -111,6 +118,7 @@ pre { overflow: auto; max-width: 100%; white-space: pre-wrap; word-break: break-
   .form-grid, .tx-card, .stats-grid, .detail-list { grid-template-columns: 1fr; }
   .hero-actions, .result-actions, .tx-header { align-items: stretch; flex-direction: column; }
   .primary-link, .ghost-button, .result-actions button, .tx-header button { width: 100%; }
+  .api-actions { grid-template-columns: 1fr; }
   .mode-switch { width: 100%; }
   .mode-switch button { flex: 1; }
 }

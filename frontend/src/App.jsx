@@ -16,10 +16,11 @@ import {
   Trash2,
   WalletCards
 } from 'lucide-react';
-import { API_BASE_URL, analyzeTicket, checkHealth } from './api/client';
+import { API_BASE_URL, analyzeTicket, checkHealth, normalizeBaseUrl } from './api/client';
 import { blankTransaction, languageOptions, sampleCases, transactionStatuses, transactionTypes, userTypes } from './data/examples';
 
 const defaultPayload = sampleCases[0].payload;
+const API_STORAGE_KEY = 'queuestorm_api_base_url';
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -63,7 +64,8 @@ function StatCard({ title, value, tone = 'neutral', icon: Icon }) {
 }
 
 export default function App() {
-  const [baseUrl, setBaseUrl] = useState(API_BASE_URL);
+  const [baseUrl, setBaseUrl] = useState(() => localStorage.getItem(API_STORAGE_KEY) || API_BASE_URL);
+  const [apiDraft, setApiDraft] = useState(() => localStorage.getItem(API_STORAGE_KEY) || API_BASE_URL);
   const [payload, setPayload] = useState(() => clone(defaultPayload));
   const [jsonText, setJsonText] = useState(() => pretty(defaultPayload));
   const [mode, setMode] = useState('form');
@@ -78,6 +80,10 @@ export default function App() {
     setJsonText(pretty(payload));
   }, [payload]);
 
+  useEffect(() => {
+    setApiDraft(baseUrl);
+  }, [baseUrl]);
+
   const parsedJson = useMemo(() => {
     try {
       return { ok: true, value: JSON.parse(jsonText) };
@@ -85,6 +91,29 @@ export default function App() {
       return { ok: false, error: err.message };
     }
   }, [jsonText]);
+
+
+  function applyApiBaseUrl() {
+    const nextUrl = normalizeBaseUrl(apiDraft);
+    if (!nextUrl) {
+      setHealth({ ok: false, message: 'Please enter a valid API base URL.' });
+      return;
+    }
+    setBaseUrl(nextUrl);
+    localStorage.setItem(API_STORAGE_KEY, nextUrl);
+    setHealth(null);
+    setError(null);
+    setResult(null);
+  }
+
+  function resetApiBaseUrl() {
+    setBaseUrl(API_BASE_URL);
+    setApiDraft(API_BASE_URL);
+    localStorage.removeItem(API_STORAGE_KEY);
+    setHealth(null);
+    setError(null);
+    setResult(null);
+  }
 
   async function runHealthCheck() {
     setHealthLoading(true);
@@ -177,9 +206,27 @@ export default function App() {
             </button>
           </div>
         </div>
-        <div className="hero-panel">
+        <div className="hero-panel api-panel">
           <span>Current API Base URL</span>
           <code>{baseUrl}</code>
+
+          <label className="field api-field">
+            <span>Temporary API URL for testing</span>
+            <input
+              value={apiDraft}
+              onChange={(e) => setApiDraft(e.target.value)}
+              placeholder="https://your-test-api.example.com"
+            />
+            <small>
+              Default comes from <code>VITE_API_BASE_URL</code>. A changed URL is saved only in this browser using localStorage.
+            </small>
+          </label>
+
+          <div className="api-actions">
+            <button type="button" className="ghost-button" onClick={applyApiBaseUrl}>Use This API</button>
+            <button type="button" className="ghost-button" onClick={resetApiBaseUrl}>Reset Default</button>
+          </div>
+
           <div className="health-line">
             {health ? (
               health.ok ? <Pill tone="success">API online: {health.data?.status || 'ok'}</Pill> : <Pill tone="danger">API error {health.status || ''}</Pill>
@@ -192,11 +239,10 @@ export default function App() {
         <form className="card input-card" onSubmit={submitAnalysis}>
           <SectionTitle icon={WalletCards} title="Ticket Input" subtitle="Use the visual form or raw JSON request body." />
 
-          <label className="field full">
-            <span>API Base URL</span>
-            <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="https://your-api-url.com" />
-            <small>For Vercel deployment, set this as <code>VITE_API_BASE_URL</code>.</small>
-          </label>
+          <div className="api-note full">
+            <strong>Using API:</strong> <code>{baseUrl}</code>
+            <span>Change it from the API panel above when testing another backend.</span>
+          </div>
 
           <div className="mode-switch">
             <button type="button" className={mode === 'form' ? 'active' : ''} onClick={() => setMode('form')}><MessageSquareText size={16} /> Form</button>

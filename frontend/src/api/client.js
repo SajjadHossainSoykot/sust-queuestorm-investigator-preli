@@ -1,4 +1,8 @@
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://sust-queuestorm-investigator.vercel.app').replace(/\/$/, '');
+export function normalizeBaseUrl(url) {
+  return String(url || '').trim().replace(/\/$/, '');
+}
+
+export const API_BASE_URL = normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL || 'https://sust-queuestorm-investigator.vercel.app');
 
 async function parseResponse(response) {
   const contentType = response.headers.get('content-type') || '';
