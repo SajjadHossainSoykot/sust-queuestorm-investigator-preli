@@ -104,8 +104,37 @@ def build_next_action(case_type: CaseType, verdict: str, txn: TransactionEntry |
     return f"Review {txn_ref} and respond through the standard support workflow."
 
 
-def build_customer_reply(case_type: CaseType, verdict: str, txn: TransactionEntry | None) -> str:
+def build_customer_reply(case_type: CaseType, verdict: str, txn: TransactionEntry | None, language: str = "en") -> str:
     txn_ref = f" transaction {txn.transaction_id}" if txn else " your concern"
+    txn_ref_bn = f" লেনদেন {txn.transaction_id}" if txn else " আপনার অভিযোগ"
+
+    if language == "bn":
+        if case_type == "phishing_or_social_engineering":
+            return (
+                "আমরা আপনার রিপোর্টটি রেকর্ড করেছি। অনুগ্রহ করে কারো সাথে আপনার পিন, ওটিপি, পাসওয়ার্ড, ভেরিফিকেশন কোড, "
+                "বা অ্যাকাউন্টের বিবরণ শেয়ার করবেন না। যেকোনো সহযোগিতার জন্য শুধুমাত্র অফিসিয়াল সাপোর্ট চ্যানেল ব্যবহার করুন।"
+            )
+        if verdict == "inconsistent":
+            return (
+                f"আমরা{txn_ref_bn} এর বিষয়ে আপনার অভিযোগ পেয়েছি। উপলব্ধ রেকর্ডের ভিত্তিতে, বিবরণগুলো "
+                "আমাদের সাপোর্ট টিম দ্বারা আরও যাচাই করা প্রয়োজন। যেকোনো যোগ্য পদক্ষেপ শুধুমাত্র অফিসিয়াল চ্যানেলের মাধ্যমে প্রক্রিয়া করা হবে।"
+            )
+        if verdict == "insufficient_data":
+            return (
+                f"আমরা{txn_ref_bn} রেকর্ড করেছি। আমাদের সাপোর্ট টিম অফিসিয়াল রেকর্ডের মাধ্যমে বিবরণগুলো যাচাই করবে। "
+                "অনুগ্রহ করে কারো সাথে আপনার পিন, ওটিপি, পাসওয়ার্ড, বা ভেরিফিকেশন কোড শেয়ার করবেন না।"
+            )
+        
+        # Consistent / default cases
+        if case_type == "agent_cash_in_issue":
+            return (
+                f"আপনার{txn_ref_bn} এর বিষয়ে আমরা অবগত হয়েছি। আমাদের এজেন্ট অপারেশন্স দল এটি দ্রুত যাচাই করবে এবং "
+                "অফিসিয়াল চ্যানেলে আপনাকে জানাবে। অনুগ্রহ করে কারো সাথে আপনার পিন বা ওটিপি শেয়ার করবেন না।"
+            )
+        return (
+            f"আমরা{txn_ref_bn} এর বিষয়ে অবগত হয়েছি। আমাদের সাপোর্ট টিম লেনদেনের বিবরণ যাচাই করবে। "
+            "যদি কোনো পরিমাণ অর্থ পাওয়ার যোগ্য হয়, তা অফিসিয়াল চ্যানেলের মাধ্যমে প্রক্রিয়া করা হবে। অনুগ্রহ করে পিন বা ওটিপি শেয়ার করবেন না।"
+        )
 
     if case_type == "phishing_or_social_engineering":
         return (

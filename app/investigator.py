@@ -48,7 +48,7 @@ def analyze_ticket(payload: AnalyzeTicketRequest) -> AnalyzeTicketResponse:
         department=department,
         agent_summary=build_agent_summary(complaint, case_type, verdict, txn),
         recommended_next_action=build_next_action(case_type, verdict, txn),
-        customer_reply=build_customer_reply(case_type, verdict, txn),
+        customer_reply=build_customer_reply(case_type, verdict, txn, language=payload.language or "en"),
         human_review_required=human_review_required,
         confidence=confidence,
         reason_codes=list(dict.fromkeys(reason_codes)),
