@@ -27,36 +27,41 @@ The system accepts a customer support ticket, checks the complaint against recen
 sust-queuestorm-investigator-preli/
 ├── backend/
 │   ├── app/
-│   │   ├── analyzer.py
-│   │   ├── config.py
-│   │   ├── main.py
-│   │   ├── models.py
-│   │   └── safety.py
+│   │   ├── analyzer.py              # Rule engine, transaction matching, LLM pipeline
+│   │   ├── config.py                # Environment variable configuration
+│   │   ├── main.py                  # FastAPI app, endpoints, exception handlers
+│   │   ├── models.py                # Pydantic request/response schemas and enums
+│   │   └── safety.py                # Post-generation safety checks and sanitizers
 │   ├── .env.example
+│   ├── .gitignore
 │   ├── Dockerfile
-│   ├── README.md
-│   ├── RUNBOOK.md
+│   ├── README.md                    # Backend-specific documentation
+│   ├── RUNBOOK.md                   # Operations runbook
+│   ├── SUST_Preli_Sample_Cases.json # Official public sample case pack
 │   ├── requirements.txt
-│   ├── run.py
-│   ├── sample_request.json
-│   ├── test_api.py
-│   └── verify_sample_cases.py
+│   ├── run.py                       # Uvicorn entry point (auto port-kill on start)
+│   ├── sample_request.json          # Example request for manual API testing
+│   ├── test_api.py                  # FastAPI TestClient endpoint tests
+│   └── verify_sample_cases.py       # Verifier for public sample cases
 │
 ├── frontend/
 │   ├── src/
 │   │   ├── api/
-│   │   │   └── client.js
+│   │   │   └── client.js            # API client with normalizeBaseUrl helper
+│   │   ├── components/
+│   │   │   └── Footer.jsx           # Footer with team credits and links
 │   │   ├── data/
-│   │   │   └── examples.js
-│   │   ├── App.jsx
-│   │   ├── main.jsx
-│   │   └── styles.css
+│   │   │   └── examples.js          # Sample ticket payloads and form options
+│   │   ├── App.jsx                  # Main dashboard component
+│   │   ├── main.jsx                 # React entry point
+│   │   └── styles.css               # Full custom CSS design system
 │   ├── .env.example
+│   ├── .gitignore
 │   ├── index.html
 │   ├── package.json
-│   ├── package-lock.json
-│   └── vercel.json
+│   └── package-lock.json
 │
+├── .gitignore
 ├── README.md
 ├── run_backend.sh
 └── run_frontend.sh
@@ -69,27 +74,33 @@ sust-queuestorm-investigator-preli/
 ### Backend
 
 - FastAPI-based backend service
-- `GET /health` endpoint
-- `POST /analyze-ticket` endpoint
-- Pydantic request and response validation
-- Deterministic rule-based investigation engine
-- Optional Gemini-powered text polishing
-- Safe fallback when Gemini is unavailable
+- `GET /health` and `POST /analyze-ticket` endpoints
+- Pydantic request and response validation with strict enum types
+- Deterministic rule-based investigation engine for all critical fields
+- Optional Gemini-powered text polishing for natural-language response fields
+- Safe fallback templates when Gemini is unavailable or times out
+- Programmatic safety sanitizer (`safety.py`) applied to all output text
 - CORS enabled for frontend integration
+- Automatic port conflict resolution on startup (`run.py` kills stale processes)
 - Docker-ready backend setup
 
 ### Frontend
 
-- Vite + React frontend
-- API base URL configurable using `.env`
-- Health check button
-- Ticket analysis form
-- JSON editor mode
-- Sample ticket cases
-- Transaction history input
-- Structured result dashboard
-- Copy JSON response support
-- Vercel-ready deployment configuration
+- Vite + React frontend with a premium dark-mode glassmorphism design
+- Runtime API base URL switcher with localStorage persistence (no `.env` restart required)
+- Health check button with live status pill
+- Ticket analysis form with visual fields for all ticket properties
+- Raw JSON editor mode with live validation
+- Pre-loaded sample ticket cases for quick testing
+- Dynamic transaction history input (add / remove entries)
+- Structured result dashboard: stats grid, evidence verdict, severity, routing details
+- Text panels for agent summary, recommended action, and customer reply
+- Reason codes displayed as pills
+- Copy full JSON response to clipboard
+- Collapsible raw JSON viewer
+- Footer component with team credits and GitHub links
+- Fully responsive layout (desktop, tablet, mobile)
+- Vercel-ready deployment
 
 ---
 
@@ -180,7 +191,7 @@ For deployed backend:
 VITE_API_BASE_URL=https://sust-queuestorm-investigator.vercel.app
 ```
 
-Important: after changing a Vite `.env` file, restart the frontend development server.
+> **Tip:** The frontend also provides a runtime API URL switcher in the hero panel. You can change the API base URL directly from the browser without editing `.env` or restarting the dev server. The URL is saved in `localStorage` and persists across page refreshes.
 
 ---
 
@@ -208,6 +219,8 @@ Health check:
 ```txt
 http://localhost:8000/health
 ```
+
+> **Note:** The backend `run.py` automatically detects and terminates any stale process occupying the configured port before starting Uvicorn. You no longer need to manually kill port conflicts.
 
 ---
 
@@ -298,56 +311,16 @@ Then redeploy the frontend.
 
 ---
 
-## Important Git Notes
-
-Do not commit these files or folders:
-
-```txt
-backend/.env
-frontend/.env
-frontend/node_modules/
-backend/.venv/
-.DS_Store
-__pycache__/
-```
-
-Only commit `.env.example` files, not real `.env` files.
-
-Recommended root `.gitignore` entries:
-
-```gitignore
-# Environment files
-.env
-backend/.env
-frontend/.env
-
-# Python
-backend/.venv/
-__pycache__/
-*.pyc
-
-# Node / Vite
-frontend/node_modules/
-frontend/dist/
-
-# OS files
-.DS_Store
-
-# Logs
-*.log
-```
-
----
-
 ## Development Workflow
 
 1. Start the backend with `./run_backend.sh`.
 2. Confirm the backend is working at `http://localhost:8000/health`.
-3. Set `frontend/.env` to `VITE_API_BASE_URL=http://localhost:8000`.
+3. Set `frontend/.env` to `VITE_API_BASE_URL=http://localhost:8000` (or use the runtime URL switcher in the UI).
 4. Start the frontend with `./run_frontend.sh`.
 5. Open `http://localhost:5173`.
-6. Submit a sample ticket from the frontend.
-7. Check the structured response from the backend.
+6. Select a sample ticket or fill in the form.
+7. Click **Analyze Ticket** and inspect the structured response.
+8. Use **Copy JSON** to export the result or expand **Raw JSON** for the full payload.
 
 ---
 
@@ -367,11 +340,15 @@ Check `frontend/.env`:
 VITE_API_BASE_URL=http://localhost:8000
 ```
 
-Restart the frontend server after changing `.env`.
+Or use the **runtime API URL switcher** in the hero panel to point to a different backend without restarting the dev server.
+
+Restart the frontend server after changing `.env` (not needed if using the runtime switcher).
 
 ---
 
 ### Port already in use
+
+The backend `run.py` now **automatically kills stale processes** on the configured port before starting. If you still encounter issues:
 
 For backend port `8000`:
 
@@ -412,15 +389,46 @@ npm install
 
 ---
 
+## Important Git Notes
+
+Do not commit these files or folders:
+
+```txt
+backend/.env
+frontend/.env
+frontend/node_modules/
+frontend/dist/
+backend/.venv/
+.DS_Store
+__pycache__/
+```
+
+Only commit `.env.example` files, not real `.env` files.
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Frontend | Vite, React |
-| Backend | FastAPI, Pydantic, Uvicorn |
-| AI / LLM | Optional Gemini API |
-| Styling | Custom CSS |
-| Deployment | Vercel / Render / Docker-compatible hosting |
+| Frontend | Vite, React, Lucide React icons |
+| Backend | FastAPI, Pydantic v2, Uvicorn |
+| AI / LLM | Optional Google Gemini API (gemini-2.5-flash) |
+| HTTP Client | HTTPX |
+| Styling | Custom CSS (dark-mode glassmorphism design system) |
+| Deployment | Vercel (frontend + backend serverless) / Render / Docker |
+
+---
+
+## Team
+
+**Team !BlackBox**
+
+| Role | Member | GitHub |
+|---|---|---|
+| API Developer | Julfikar Jim | [@md-julfikar](https://github.com/md-julfikar) |
+| Frontend Developer | Sajjad Hossain Soykot | [@SajjadHossainSoykot](https://github.com/SajjadHossainSoykot) |
+| Team Member | Abu Ubaida | [@ubaida01](https://github.com/ubaida01) |
 
 ---
 
@@ -432,5 +440,6 @@ This project is prepared as a complete full-stack setup:
 - Frontend app is inside `frontend/`
 - Root README explains the full project
 - Shell scripts simplify local running
-- Frontend connects to backend using `VITE_API_BASE_URL`
-
+- Frontend connects to backend using `VITE_API_BASE_URL` or the runtime URL switcher
+- Auto port-kill on backend startup prevents stale-process conflicts
+- Footer credits team members with GitHub links
